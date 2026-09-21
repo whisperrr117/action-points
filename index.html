@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="HandheldFriendly" content="true" />
+  <meta name="MobileOptimized" content="width" />
+  <meta name="theme-color" content="#F4EDE3" />
+  <title>行动积分</title>
+  <style>
+    :root {
+      --bg: #f4ede3;
+      --bg-warm: #ede3d4;
+      --surface: #fffbf6;
+      --surface-2: #f6eee4;
+      --fg: #2c2118;
+      --muted: #7a6a5a;
+      --subtle: #9a8878;
+      --primary: #6b4530;
+      --primary-fg: #fff8f0;
+      --border: #e6d9c8;
+      --accent: #b86a52;
+      --good: #5a7a4a;
+      --radius-card: 1.35rem;
+      --shadow: 0 10px 28px color-mix(in srgb, var(--fg) 7%, transparent);
+      --font: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+      --display: "Songti SC", "STSong", "Source Han Serif SC", "Iowan Old Style", Palatino, Georgia, serif;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden !important;
+      -webkit-text-size-adjust: 100% !important;
+      text-size-adjust: 100% !important;
+      touch-action: manipulation;
+      overscroll-behavior-x: none;
+    }
+    body {
+      min-height: 100dvh;
+      font-family: var(--font);
+      background: radial-gradient(900px 480px at 50% -8%, color-mix(in srgb, var(--surface) 75%, transparent), transparent 55%), var(--bg);
+      color: var(--fg);
+      padding: 0 max(12px, env(safe-area-inset-left, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-right, 0px));
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+    input, textarea, select, button {
+      font-size: 16px !important;
+      max-width: 100%;
+    }
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      white-space: nowrap;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .wrap {
+      width: 100%;
+      max-width: 36rem;
+      margin: 0 auto;
+      padding: 1rem 0 3.5rem;
+      display: grid;
+      gap: 0.9rem;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+    header { text-align: center; padding-top: 0.4rem; }
+    .kicker { font-size: 12px; letter-spacing: 0.18em; color: var(--muted); margin: 0; }
+    h1 {
+      font-family: var(--display);
+      font-size: clamp(1.7rem, 7vw, 2.6rem);
+      font-weight: 500;
+      margin: 0.3rem 0 0;
+      letter-spacing: -0.03em;
+    }
+    .tag { margin: 0.4rem auto 0; color: var(--muted); font-size: 13px; line-height: 1.5; max-width: 22rem; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow);
+      padding: 1.2rem 1.15rem;
+      max-width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .card + .card { /* spacing already via grid */ }
+    .step { font-size: 11px; letter-spacing: 0.18em; color: var(--subtle); margin: 0 0 0.35rem; text-transform: none; }
+    h2 { font-family: var(--display); font-size: 1.18rem; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
+    .desc { margin: 0.35rem 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .hero-grid { display: grid; gap: 0.7rem; }
+    .level-line { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+    .level-title { font-family: var(--display); font-size: 1.2rem; font-weight: 500; }
+    .level-sub { font-size: 12px; color: var(--muted); }
+    .xp-bar {
+      height: 10px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .xp-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      border-radius: 999px;
+      transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .xp-meta { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 12px; color: var(--muted); margin-top: 0.35rem; flex-wrap: wrap; }
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+    .stat {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 0.65rem 0.35rem;
+      text-align: center;
+      border: 1px solid transparent;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .stat:active { transform: scale(0.98); }
+
+    .stat b { display: block; margin-top: 0.15rem; font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+    .stat span { color: var(--muted); font-size: 11px; }
+    .today-detail {
+      margin-top: 0.75rem;
+      padding: 0.85rem 0.9rem;
+      border-radius: 14px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .today-detail.hidden { display: none; }
+    .today-detail .td-title {
+      font-weight: 500;
+      font-size: 14px;
+      margin: 0 0 0.55rem;
+      color: var(--fg);
+    }
+    .today-detail .td-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      align-items: flex-start;
+      padding: 0.45rem 0;
+      border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    }
+    .today-detail .td-item:first-of-type { border-top: 0; padding-top: 0; }
+    .today-detail .td-meta { font-size: 12px; color: var(--muted); margin-top: 0.15rem; }
+    .today-detail .td-pts { color: var(--primary); font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem 0.6rem;
+      margin-top: 0.55rem;
+    }
+    .metric {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .metric b {
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .metric.up b { color: var(--accent); }
+    .metric.down b { color: var(--good); }
+    .add-toggle-row { margin-top: 0.75rem; }
+    .add.collapsed .add-body { display: none; }
+    .add .add-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font: inherit;
+      color: var(--fg);
+      text-align: left;
+      cursor: pointer;
+    }
+    .add .add-head strong { font-size: 14px; font-weight: 500; }
+    .add .add-chevron {
+      font-size: 12px;
+      color: var(--muted);
+      transition: transform 0.2s ease;
+    }
+    .add:not(.collapsed) .add-chevron { transform: rotate(180deg); }
+    .add-body { margin-top: 0.65rem; }
+    .points-big {
+      font-family: var(--display);
+      font-size: clamp(2.5rem, 10vw, 3.5rem);
+      color: var(--primary);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      margin: 0.2rem 0 0;
+      letter-spacing: -0.03em;
+    }
+    .points-big.pop { animation: bal-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+    .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.55rem; max-width: 100%; }
+    .chip {
+      font-size: 12px;
+      color: var(--muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.28rem 0.65rem;
+      white-space: nowrap;
+    }
+    .chip.hot { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 35%, var(--border)); }
+    textarea, input[type="text"], input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      border-radius: 12px;
+      padding: 0.8rem 0.9rem;
+      font: inherit;
+      font-size: 16px;
+    }
+    textarea { min-height: 5rem; resize: vertical; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.7rem; min-width: 0; max-width: 100%; }
+    .row > .btn { flex: 1 1 calc(50% - 0.25rem); min-width: 0; }
+    .btn {
+      border: 0;
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 0 0.75rem;
+      font-size: 16px;
+      font-weight: 500;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
+    }
+    .btn.sec {
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .btn.sec.on,
+    .cat-btn.on,
+    .wcat-btn.on,
+    .wecat-btn.on {
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 22%, transparent);
+    }
+    .btn.sec:not(.on),
+    .cat-btn:not(.on),
+    .wcat-btn:not(.on),
+    .wecat-btn:not(.on) {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      opacity: 0.92;
+    }
+    .btn.sec:not(.on):active,
+    .cat-btn:not(.on):active,
+    .wcat-btn:not(.on):active,
+    .wecat-btn:not(.on):active {
+      background: var(--surface-2);
+      color: var(--fg);
+    }
+    .btn.ghost { background: transparent; color: var(--muted); border: 0; flex: 0 0 auto; }
+    .btn.outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+    .btn.lg { min-height: 48px; font-size: 16px; }
+    /* 主按钮按下反馈 */
+    .btn:not(.sec):not(.ghost):not(.outline):active {
+      filter: brightness(0.92);
+      transform: scale(0.98);
+    }
+    /* 难度档位未选中更淡、选中更实 */
+    .level:not(.on) {
+      background: var(--surface);
+      color: var(--muted);
+      border-color: var(--border);
+    }
+    .level:not(.on) .lv-xp { color: color-mix(in srgb, var(--primary) 70%, var(--muted)); }
+    .level:not(.on) .lv-hint { color: var(--subtle); }
+    .level.on {
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 20%, transparent);
+    }
+    /* 今日统计未选中/选中 */
+    .stat:not(.on) {
+      background: var(--surface-2);
+      border-color: transparent;
+    }
+    .stat.on {
+      border-color: var(--primary);
+      background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+      box-shadow: 0 2px 10px color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+    .stat.on span { color: var(--primary); }
+    /* 趋势 tabs */
+    .tabs button:not(.on) {
+      color: var(--subtle);
+      background: transparent;
+    }
+    .tabs button.on {
+      background: var(--surface);
+      color: var(--primary);
+      font-weight: 500;
+      box-shadow: 0 1px 4px color-mix(in srgb, var(--fg) 8%, transparent);
+    }
+    /* 开关类按钮（置顶/长期/暂停） */
+    .btn.sec[data-on="1"] {
+      background: var(--primary);
+      color: var(--primary-fg);
+      border-color: var(--primary);
+    }
+    .btn.sec[data-on="0"] {
+      background: var(--surface);
+      color: var(--muted);
+      border-color: var(--border);
+    }
+    .hint { font-size: 12px; color: var(--subtle); line-height: 1.5; margin: 0.5rem 0 0; }
+    .suggest { background: var(--surface-2); border-radius: 14px; padding: 0.85rem 0.95rem; margin-top: 0.8rem; font-size: 13px; line-height: 1.5; border: 1px solid transparent; }
+    .levels {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.7rem;
+      align-items: stretch;
+    }
+    @media (min-width: 640px) { .levels { grid-template-columns: repeat(5, 1fr); } }
+    .level {
+      text-align: left;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 0.75rem 0.7rem;
+      color: var(--fg);
+      min-height: 4.6rem;
+      height: 100%;
+      font-size: 15px;
+      font-weight: 500;
+      min-width: 0;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.2rem;
+      transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+    }
+    .level .lv-name { font-size: 15px; font-weight: 500; line-height: 1.3; }
+    .level .lv-xp {
+      font-size: 12px;
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+      margin-top: 0.15rem;
+    }
+    .level .lv-hint {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.35;
+      margin-top: 0.1rem;
+    }
+    .level.on { background: var(--primary); color: var(--primary-fg); border-color: var(--primary); }
+    .level.on .lv-xp { color: color-mix(in srgb, var(--primary-fg) 90%, transparent); }
+    .level.on .lv-hint { color: color-mix(in srgb, var(--primary-fg) 75%, transparent); }
+    .draw {
+      margin-top: 1.1rem;
+      background: linear-gradient(180deg, color-mix(in srgb, var(--bg-warm) 70%, var(--surface)), var(--bg-warm));
+      border: 1px solid var(--border);
+      border-radius: 1.2rem;
+      padding: 1.3rem 0.95rem 1.15rem;
+      text-align: center;
+    }
+    .orb {
+      position: relative;
+      width: min(9.5rem, 40vw);
+      height: min(9.5rem, 40vw);
+      margin: 0.9rem auto 0;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 10px 26px color-mix(in srgb, var(--primary) 14%, transparent);
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 8vw, 2.6rem);
+      color: var(--primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .orb::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      pointer-events: none;
+      opacity: 0;
+    }
+    .orb.rolling { animation: roll-pulse 0.11s ease-out; }
+    .orb.land { animation: land 0.65s cubic-bezier(0.22, 1, 0.36, 1); }
+    .orb.crit {
+      animation: land 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 0 0 transparent, 0 14px 36px color-mix(in srgb, var(--accent) 28%, transparent);
+    }
+    .orb.crit::after {
+      animation: ring-pop 0.75s ease-out forwards;
+      border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    }
+    .orb.land::after {
+      animation: ring-pop 0.65s ease-out forwards;
+      border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+    }
+    .orb-num { position: relative; z-index: 1; display: inline-block; }
+    .orb.land .orb-num, .orb.crit .orb-num { animation: num-win 0.65s cubic-bezier(0.22, 1, 0.36, 1); }
+    .result-panel {
+      margin-top: 0.85rem;
+      padding: 0.85rem 0.9rem;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    .result-panel.hidden { display: none; }
+    .result-title { font-weight: 600; font-size: 15px; }
+    .result-title.crit { color: var(--accent); }
+    .result-msg { margin: 0.35rem 0 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+    .result-extra { margin-top: 0.45rem; font-size: 12px; color: var(--primary); }
+    .tabs { display: flex; background: var(--surface-2); border-radius: 12px; padding: 4px; gap: 4px; }
+    .tabs button {
+      flex: 1; border: 0; background: transparent; color: var(--muted);
+      border-radius: 10px; min-height: 40px; font-size: 14px;
+    }
+    .tabs button.on {
+      background: var(--surface); color: var(--fg);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--fg) 7%, transparent);
+    }
+    .chart { display: flex; align-items: flex-end; gap: 4px; height: 9rem; margin-top: 0.85rem; }
+    .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; height: 100%; }
+    .bar i { display: block; width: 100%; max-width: 26px; background: var(--primary); border-radius: 6px 6px 0 0; min-height: 2px; }
+    .bar span { font-size: 10px; color: var(--muted); margin-top: 0.25rem; white-space: nowrap; }
+    .empty {
+      height: 8.5rem; display: grid; place-items: center; background: var(--surface-2);
+      border-radius: 12px; color: var(--muted); font-size: 13px; text-align: center; padding: 1rem; margin-top: 0.85rem;
+    }
+    .reward {
+      background: color-mix(in srgb, var(--surface-2) 55%, var(--surface));
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: border-color 0.15s ease;
+    }
+    .reward-name { font-weight: 500; font-size: 15px; line-height: 1.4; }
+    .reward-tag {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.15rem 0.55rem;
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.02em;
+    }
+    .reward-tag.cat-small { color: var(--good); border-color: color-mix(in srgb, var(--good) 30%, var(--border)); }
+    .reward-tag.cat-mid { color: var(--primary); border-color: color-mix(in srgb, var(--primary) 25%, var(--border)); }
+    .reward-tag.cat-large { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); }
+    .price { color: var(--primary); font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 500; margin: 0.4rem 0 0; }
+    .reward-actions { display: flex; gap: 0.45rem; width: 100%; }
+    .reward-actions .btn { flex: 1; font-size: 16px; }
+    .reward-actions .btn.ghost { flex: 0 0 auto; }
+    .list { display: grid; gap: 0.65rem; margin-top: 0.75rem; }
+    .hist {
+      background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.8rem 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+    .hist b { color: var(--primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ach {
+      display: flex; gap: 0.7rem; align-items: flex-start;
+      padding: 0.75rem 0.8rem; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface-2);
+    }
+    .ach.on { border-color: color-mix(in srgb, var(--primary) 30%, var(--border)); background: color-mix(in srgb, var(--surface) 80%, var(--bg-warm)); }
+    .ach-ico { font-size: 1.2rem; line-height: 1; width: 1.5rem; text-align: center; }
+    .ach-title { font-size: 14px; font-weight: 500; }
+    .ach-desc { font-size: 12px; color: var(--muted); margin-top: 0.15rem; line-height: 1.45; }
+    .ach.locked { opacity: 0.55; }
+    .box-card {
+      display: flex; justify-content: space-between; align-items: center; gap: 0.6rem;
+      padding: 0.85rem 0.9rem; border-radius: 12px;
+      border: 1px dashed var(--border); background: var(--surface-2);
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      top: max(0.75rem, env(safe-area-inset-top));
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: calc(100% - 2rem);
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.7rem 1rem;
+      box-shadow: var(--shadow);
+      z-index: 60;
+      font-size: 14px;
+    }
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.25rem;
+      background: var(--surface);
+      color: var(--fg);
+      width: min(24rem, calc(100% - 2rem));
+    }
+    dialog::backdrop { background: color-mix(in srgb, var(--fg) 25%, transparent); }
+    .hidden { display: none !important; }
+    .add { border: 1px dashed var(--border); border-radius: 1rem; padding: 0.95rem; margin-top: 0.5rem; }
+    label { display: block; font-size: 13px; font-weight: 500; margin: 0.65rem 0 0.3rem; }
+    .last-result {
+      margin-top: 0.55rem;
+      padding: 0.65rem 0.75rem;
+      border-radius: 12px;
+      background: var(--surface-2);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .burst {
+      pointer-events: none;
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      overflow: hidden;
+    }
+    .burst i {
+      position: absolute;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.85;
+      animation: particle 0.85s ease-out forwards;
+    }
+    @keyframes roll-pulse {
+      0% { transform: scale(0.97); opacity: 0.65; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes land {
+      0% { transform: scale(0.88); }
+      40% { transform: scale(1.12); }
+      70% { transform: scale(0.98); }
+      100% { transform: scale(1); }
+    }
+    @keyframes ring-pop {
+      0% { opacity: 0.85; transform: scale(0.92); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+    @keyframes num-win {
+      0% { transform: scale(0.72); opacity: 0.5; }
+      45% { transform: scale(1.16); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bal-pop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    @keyframes particle {
+      0% { transform: translate(0, 0) scale(1); opacity: 0.9; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+    }
+
+    /* Wishlist */
+    .wish-focus {
+      background: linear-gradient(160deg, color-mix(in srgb, var(--surface) 85%, var(--bg-warm)), var(--surface));
+      border: 1px solid color-mix(in srgb, var(--primary) 18%, var(--border));
+      border-radius: 1.1rem;
+      padding: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .wish-focus .wf-label {
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin: 0 0 0.45rem;
+    }
+    .wish-card {
+      background: color-mix(in srgb, var(--surface-2) 50%, var(--surface));
+      border: 1px solid var(--border);
+      border-radius: 1.1rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .wish-card.ready {
+      border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--primary) 8%, transparent);
+    }
+    .wish-card.done {
+      opacity: 0.92;
+      background: color-mix(in srgb, var(--surface-2) 80%, var(--surface));
+    }
+    .wish-card.paused { opacity: 0.65; }
+    .wish-top {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .wish-ico {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 1.45rem;
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+    .wish-ico img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .wish-name {
+      font-weight: 500;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+    .wish-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
+    }
+    .wish-tags span {
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.1rem 0.45rem;
+      background: var(--surface);
+    }
+    .wish-note {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      line-height: 1.45;
+    }
+    .wish-progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    .wish-progress-row b { color: var(--primary); font-weight: 500; }
+    .wish-bar {
+      height: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .wish-bar i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .wish-bar.full i {
+      background: linear-gradient(90deg, var(--good), color-mix(in srgb, var(--good) 60%, var(--primary)));
+    }
+    .wish-meta {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .wish-meta .ok { color: var(--good); font-weight: 500; }
+    .wish-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .wish-actions .btn {
+      flex: 1 1 auto;
+      min-width: 4.5rem;
+      font-size: 14px !important;
+      padding: 0 0.65rem;
+    }
+    .wish-actions .btn.ghost { flex: 0 0 auto; }
+    .wish-section-title {
+      font-size: 13px;
+      color: var(--muted);
+      margin: 1rem 0 0.55rem;
+      font-weight: 500;
+    }
+    .wish-celebrate {
+      animation: wish-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    @keyframes wish-pop {
+      0% { transform: scale(0.96); }
+      40% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    .img-preview {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 12px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+      margin-top: 0.4rem;
+      display: none;
+    }
+    .img-preview.show { display: block; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .orb.rolling, .orb.land, .orb.crit, .orb.land::after, .orb.crit::after,
+      .orb .orb-num, .points-big.pop, .burst i, .xp-fill, .wish-celebrate, .wish-bar i { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="kicker">小行动 · 随机惊喜</p>
+      <h1>行动积分</h1>
+      <p class="tag">先做一点，再摇一下今天的运气。</p>
+      <button type="button" id="btn-reset-zoom" class="btn sec" style="margin:0.6rem auto 0;max-width:14rem;display:block;font-size:14px!important;min-height:40px">页面太大？点此恢复</button>
+    </header>
+
+    <!-- 首页进度中心 -->
+    <section class="card hero-grid">
+      <div>
+        <div style="font-size:12px;color:var(--muted)">当前可兑换积分</div>
+        <div class="points-big" id="balance">0</div>
+        <div class="chip-row">
+          <span class="chip" id="chip-earned">累计获得 0</span>
+          <span class="chip" id="chip-spent">已兑换 0</span>
+          <span class="chip" id="chip-today">今日 0 次</span>
+          <span class="chip" id="chip-week">本周 0 次</span>
+        </div>
+        <div class="last-result hidden" id="last-result"></div>
+      </div>
+      <div style="margin-top:0.35rem;padding-top:0.85rem;border-top:1px solid var(--border)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:0.25rem">永久行动记录 · 兑换不会减少 XP</div>
+        <div class="level-line">
+          <div>
+            <div class="level-title" id="lv-title">Lv.1 开始行动</div>
+            <div class="level-sub" id="lv-sub">累计 XP 记录你做过的行动。</div>
+          </div>
+        </div>
+        <div class="xp-bar" style="margin-top:0.65rem"><div class="xp-fill" id="xp-fill"></div></div>
+        <div class="xp-meta">
+          <span id="xp-text">0 / 50 XP</span>
+          <span id="xp-left">距离下一级还差 50 XP</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 任务与抽奖 -->
+    <section class="card">
+      <p class="step">01</p>
+      <h2>写下要做的事</h2>
+      <p class="desc">先记下这一件。做完再回来抽积分。</p>
+      <div style="margin-top:0.85rem">
+        <textarea id="task" placeholder="例如：回复一条工作消息、整理电脑桌面、背 10 个单词…"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn" id="btn-ai">估难度</button>
+        <button class="btn sec" id="btn-pick">自己选</button>
+      </div>
+      <p class="hint">本地规则评估，不上传任务。难度决定积分区间；抽到几分就记几分 XP。</p>
+      <div id="level-box" class="hidden">
+        <div class="suggest" id="suggest"></div>
+        <div class="levels" id="levels"></div>
+      </div>
+
+      <div class="draw">
+        <p class="step">02 · 做完再抽</p>
+        <div class="orb" id="orb"><span class="orb-num">?</span></div>
+        <p class="desc" id="range-text" style="margin-top:0.75rem">选好档位后，做完再点下面的按钮。</p>
+        <div class="row" style="max-width:20rem;margin:0.95rem auto 0">
+          <button class="btn lg" id="btn-draw" disabled>完成了，抽积分</button>
+        </div>
+        <div class="result-panel hidden" id="result-panel">
+          <div class="result-title" id="result-title"></div>
+          <div class="result-msg" id="result-msg"></div>
+          <div class="result-extra" id="result-extra"></div>
+        </div>
+        <div class="row hidden" id="next-row" style="max-width:20rem;margin:0.65rem auto 0">
+          <button class="btn sec" id="btn-next">记下下一件</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 今日总结 -->
+    <section class="card">
+      <p class="step">今日</p>
+      <h2>今天的推进</h2>
+      <p class="desc">点一下数字，可以看对应详情。</p>
+      <div class="stat-row" style="margin-top:0.75rem">
+        <button type="button" class="stat" data-today="count"><span>行动次数</span><b id="today-count">0</b></button>
+        <button type="button" class="stat" data-today="pts"><span>获得积分</span><b id="today-pts">0</b></button>
+        <button type="button" class="stat" data-today="xp"><span>获得 XP</span><b id="today-xp">0</b></button>
+      </div>
+      <div class="stat-row" style="margin-top:0.45rem">
+        <button type="button" class="stat" data-today="max"><span>今日最高</span><b id="today-max">—</b></button>
+        <button type="button" class="stat" data-today="ach"><span>新成就</span><b id="today-ach">0</b></button>
+        <button type="button" class="stat" data-today="all"><span>累计行动</span><b id="all-count">0</b></button>
+      </div>
+      <div class="today-detail hidden" id="today-detail"></div>
+      <p class="desc" id="today-line" style="margin-top:0.75rem">还没有记录。做完一件，这里会出现一句简短反馈。</p>
+    </section>
+
+    <!-- 商店 -->
+    <section class="card">
+      <p class="step">兑换</p>
+      <h2>额外奖励</h2>
+      <p class="desc">适合直接兑换的小奖励。更大的长期目标请放在下方「愿望清单」。</p>
+      <div class="list" id="shop"></div>
+      <div class="add collapsed" id="add-box">
+        <button type="button" class="add-head" id="btn-toggle-add" aria-expanded="false">
+          <strong>＋ 添加奖励</strong>
+          <span class="add-chevron">▼</span>
+        </button>
+        <div class="add-body">
+          <label for="r-name">名称</label>
+          <input id="r-name" type="text" placeholder="例如：一杯平时会犹豫的咖啡" />
+          <label for="r-desc">说明</label>
+          <textarea id="r-desc" placeholder="为什么这算额外奖励？" style="min-height:3.5rem"></textarea>
+          <label for="r-cat">类别</label>
+          <div class="row" style="margin-top:0.35rem">
+            <button type="button" class="btn sec cat-btn on" data-cat="small">小型</button>
+            <button type="button" class="btn sec cat-btn" data-cat="mid">中型</button>
+            <button type="button" class="btn sec cat-btn" data-cat="large">大型</button>
+          </div>
+          <label for="r-price">积分价格</label>
+          <input id="r-price" type="number" min="1" placeholder="例如：40" />
+          <div class="row">
+            <button class="btn sec" id="btn-price-ai">估个价</button>
+            <button class="btn" id="btn-add">确认添加</button>
+          </div>
+          <p class="hint" id="r-hint"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 愿望清单 -->
+    <section class="card">
+      <p class="step">⭐ 愿望</p>
+      <h2>愿望清单</h2>
+      <p class="desc">写下真正想要的东西。进度按当前可兑换积分对照目标；不会自动扣分，只有点「兑换愿望」才扣除。</p>
+      <div id="wish-focus"></div>
+      <div class="list" id="wish-active"></div>
+      <div class="wish-section-title hidden" id="wish-done-title">已实现愿望</div>
+      <div class="list" id="wish-done"></div>
+      <div class="add collapsed" id="wish-add-box" style="margin-top:0.85rem">
+        <button type="button" class="add-head" id="btn-toggle-wish" aria-expanded="false">
+          <strong>＋ 添加愿望</strong>
+          <span class="add-chevron">▼</span>
+        </button>
+        <div class="add-body">
+          <label for="w-name">愿望名称</label>
+          <input id="w-name" type="text" placeholder="例如：新耳机、一直想去的餐厅" />
+          <label for="w-target">目标积分</label>
+          <input id="w-target" type="number" min="1" placeholder="你愿意为它积累多少积分" />
+          <label for="w-cat">分类</label>
+          <div class="row" style="margin-top:0.35rem">
+            <button type="button" class="btn sec wcat-btn on" data-wcat="buy">🛍️ 想买</button>
+            <button type="button" class="btn sec wcat-btn" data-wcat="eat">🍴 想吃</button>
+            <button type="button" class="btn sec wcat-btn" data-wcat="hobby">🎨 兴趣</button>
+            <button type="button" class="btn sec wcat-btn" data-wcat="exp">🎟️ 体验</button>
+            <button type="button" class="btn sec wcat-btn" data-wcat="other">🌟 其他</button>
+          </div>
+          <label for="w-note">备注（可选）</label>
+          <textarea id="w-note" placeholder="为什么想要它？" style="min-height:3.2rem"></textarea>
+          <label for="w-img">图片（可选）</label>
+          <input id="w-img" type="file" accept="image/*" />
+          <img id="w-img-preview" class="img-preview" alt="" />
+          <div class="row" style="margin-top:0.55rem">
+            <button type="button" class="btn sec" id="w-long" data-on="0">标记长期愿望</button>
+            <button type="button" class="btn sec" id="w-pin" data-on="0">⭐ 置顶</button>
+          </div>
+          <div class="row">
+            <button class="btn" id="btn-wish-add">确认添加</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 成就 -->
+    <section class="card">
+      <p class="step">成就</p>
+      <h2>已经留下的痕迹</h2>
+      <p class="desc">自动解锁，不用额外维护。</p>
+      <div class="list" id="achs"></div>
+    </section>
+
+    <!-- 趋势 -->
+    <section class="card">
+      <p class="step">趋势</p>
+      <h2>行动趋势</h2>
+      <p class="desc">可切换看积分或 XP。</p>
+      <div class="tabs" style="margin-top:0.55rem">
+        <button class="on" data-metric="points">积分</button>
+        <button data-metric="xp">XP</button>
+      </div>
+      <div class="tabs" style="margin-top:0.45rem">
+        <button class="on" data-range="day">近 14 天</button>
+        <button data-range="week">近 12 周</button>
+        <button data-range="month">近 12 月</button>
+      </div>
+      <div id="chart"></div>
+    </section>
+
+    <!-- 历史 -->
+    <section class="card">
+      <p class="step">记录</p>
+      <h2>最近行动</h2>
+      <p class="desc">回头看时，会发现自己其实做了不少。</p>
+      <div class="list" id="recent-tasks"></div>
+      <h2 style="margin-top:1rem;font-size:1rem">最近兑换 / 开箱</h2>
+      <div class="list" id="recent-redeem"></div>
+    </section>
+
+    <!-- 数据 -->
+    <section class="card">
+      <p class="step">数据</p>
+      <h2>备份与设置</h2>
+      <p class="desc">数据保存在当前浏览器中。更换浏览器、清除网站数据或换设备后，可能丢失。建议定期导出备份。</p>
+      <div class="row">
+        <button class="btn" id="btn-export">一键导出</button>
+        <button class="btn sec" id="btn-import">一键导入</button>
+      </div>
+      <div class="row"><button class="btn ghost" id="btn-clear">清空本地数据</button></div>
+      <p class="hint">评估与抽奖均在本地完成，不上传任务内容。</p>
+      <input id="file" type="file" accept="application/json,.json" class="hidden" />
+    </section>
+  </div>
+
+  <dialog id="dlg">
+    <h2 id="dlg-title" style="font-family:var(--display);font-size:1.1rem;margin:0;font-weight:500"></h2>
+    <p id="dlg-desc" class="desc"></p>
+    <div class="row" style="margin-top:1rem">
+      <button class="btn sec" id="dlg-no">取消</button>
+      <button class="btn" id="dlg-yes">继续</button>
+    </div>
+  </dialog>
+  <dialog id="edit">
+    <h2 style="font-family:var(--display);font-size:1.1rem;margin:0;font-weight:500">修改奖励</h2>
+    <label>名称</label>
+    <input id="e-name" type="text" />
+    <label>说明</label>
+    <textarea id="e-desc" style="min-height:3.5rem"></textarea>
+    <label>价格</label>
+    <input id="e-price" type="number" min="1" />
+    <div class="row" style="margin-top:0.9rem">
+      <button class="btn" id="e-save">保存</button>
+      <button class="btn outline" id="e-del">删除</button>
+    </div>
+  </dialog>
+  <dialog id="wish-edit">
+    <h2 style="font-family:var(--display);font-size:1.1rem;margin:0;font-weight:500">编辑愿望</h2>
+    <label>名称</label>
+    <input id="we-name" type="text" />
+    <label>目标积分</label>
+    <input id="we-target" type="number" min="1" />
+    <label>分类</label>
+    <div class="row" style="margin-top:0.35rem">
+      <button type="button" class="btn sec wecat-btn on" data-wcat="buy">🛍️ 想买</button>
+      <button type="button" class="btn sec wecat-btn" data-wcat="eat">🍴 想吃</button>
+      <button type="button" class="btn sec wecat-btn" data-wcat="hobby">🎨 兴趣</button>
+      <button type="button" class="btn sec wecat-btn" data-wcat="exp">🎟️ 体验</button>
+      <button type="button" class="btn sec wecat-btn" data-wcat="other">🌟 其他</button>
+    </div>
+    <label>备注</label>
+    <textarea id="we-note" style="min-height:3.2rem"></textarea>
+    <label>更换图片（可选）</label>
+    <input id="we-img" type="file" accept="image/*" />
+    <img id="we-img-preview" class="img-preview" alt="" />
+    <div class="row" style="margin-top:0.55rem">
+      <button type="button" class="btn sec" id="we-long" data-on="0">长期愿望</button>
+      <button type="button" class="btn sec" id="we-pin" data-on="0">⭐ 置顶</button>
+      <button type="button" class="btn sec" id="we-pause" data-on="0">暂停</button>
+    </div>
+    <div class="row" style="margin-top:0.9rem">
+      <button class="btn" id="we-save">保存</button>
+      <button class="btn outline" id="we-del">删除</button>
+    </div>
+  </dialog>
+
+
+<script>
+(function () {
+  // zoom helper for Huawei
+  function applyZoomFix(force) {
+    try {
+      var vv = window.visualViewport;
+      var scale = vv && vv.scale ? vv.scale : 1;
+      var htmlEl = document.documentElement;
+      var body = document.body;
+      htmlEl.style.overflowX = "hidden";
+      body.style.overflowX = "hidden";
+      if (scale > 1.02 || force) {
+        htmlEl.style.zoom = String(scale > 1.02 ? 1 / scale : 1);
+        body.style.width = "100%";
+        htmlEl.style.width = "100%";
+      } else htmlEl.style.zoom = "";
+    } catch (e) {}
+  }
+  applyZoomFix(false);
+  window.addEventListener("orientationchange", function () { setTimeout(function () { applyZoomFix(false); }, 200); });
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", function () { applyZoomFix(false); });
+  }
+  document.addEventListener("focusout", function () { setTimeout(function () { applyZoomFix(false); }, 100); });
+  window.__resetPageZoom = function () {
+    try {
+      document.documentElement.style.zoom = "1";
+      document.body.style.zoom = "1";
+      window.scrollTo(0, 0);
+      setTimeout(function () {
+        document.documentElement.style.zoom = "";
+        document.body.style.zoom = "";
+        applyZoomFix(true);
+      }, 50);
+    } catch (e) {}
+  };
+
+  const KEY = "action-points-v2";
+  const KEY_LEGACY = "action-points-v1";
+  const $ = function (id) { return document.getElementById(id); };
+
+  const LEVELS = [
+    { id: "micro", name: "微小", min: 1, max: 6, hint: "几分钟就能做完" },
+    { id: "light", name: "轻量", min: 3, max: 9, hint: "清楚好上手" },
+    { id: "normal", name: "普通", min: 5, max: 15, hint: "需要一点专注" },
+    { id: "hard", name: "费劲", min: 10, max: 25, hint: "启动成本更高" },
+    { id: "chunk", name: "大块", min: 20, max: 40, hint: "规模大有实感" },
+  ];
+
+  const RANK_MSGS = {
+    tiny: ["重点不是分数，是你真的开始了。", "很小的一步，也算推进。", "开始本身，就已经把事情从脑海里拿下来了。"],
+    steady: ["不急不躁，把这一件做完就很好。", "稳定地推进，比偶尔爆发更可靠。", "今天靠的是行动，不是运气。"],
+    ok: ["做完了。这一下，值得记一笔。", "从想到到做完，中间最难的那一步你跨过了。", "结果不错，过程更重要：你动手了。"],
+    high: ["今天这一步，推进得很漂亮。", "手感在线。这种感觉可以多留一会儿。", "完成感来了——收下这份小惊喜。"],
+    boost: ["运气站在你这边。这一下很提气。", "高收益一抽。记得这是行动换来的。", "漂亮。把这份劲儿留给下一件小事。"],
+    crit: ["在这个难度区间抽到了顶格附近。", "今天运气很好。更重要的是，你先做完了。", "行动暴击达成。这一下够爽的。"],
+  };
+  const RANK_TITLES = { tiny: "小步启动", steady: "稳稳推进", ok: "行动成功", high: "高能行动", boost: "高收益", crit: "行动暴击" };
+
+  const LEVEL_NAMES = [
+    { lv: 1, name: "开始行动", need: 50 },
+    { lv: 2, name: "小步前进", need: 80 },
+    { lv: 3, name: "稳定推进", need: 120 },
+    { lv: 4, name: "行动力形成", need: 180 },
+    { lv: 5, name: "状态不错", need: 240 },
+    { lv: 6, name: "越做越顺", need: 320 },
+    { lv: 7, name: "习惯在路上", need: 420 },
+    { lv: 8, name: "行动成自然", need: 520 },
+    { lv: 9, name: "轻装前进", need: 650 },
+    { lv: 10, name: "持续行动者", need: 800 },
+  ];
+
+  const ACHIEVEMENTS = [
+    { id: "first", name: "第一步", desc: "完成第 1 个行动", icon: "🌱", test: function (s) { return s.tasks.length >= 1; } },
+    { id: "five", name: "动起来了", desc: "累计完成 5 个行动", icon: "🔨", test: function (s) { return s.tasks.length >= 5; } },
+    { id: "ten", name: "小步不停", desc: "累计完成 10 个行动", icon: "⚡", test: function (s) { return s.tasks.length >= 10; } },
+    { id: "twentyfive", name: "行动力形成", desc: "累计完成 25 个行动", icon: "🔥", test: function (s) { return s.tasks.length >= 25; } },
+    { id: "fifty", name: "五十次", desc: "累计完成 50 个行动", icon: "💪", test: function (s) { return s.tasks.length >= 50; } },
+    { id: "hundred", name: "百次行动", desc: "累计完成 100 个行动", icon: "🏆", test: function (s) { return s.tasks.length >= 100; } },
+    { id: "xp100", name: "百点积累", desc: "累计获得 100 XP", icon: "📈", test: function (s) { return totalsFrom(s).xp >= 100; } },
+    { id: "xp500", name: "五百积累", desc: "累计获得 500 XP", icon: "🌟", test: function (s) { return totalsFrom(s).xp >= 500; } },
+    { id: "xp1000", name: "千点足迹", desc: "累计获得 1000 XP", icon: "✨", test: function (s) { return totalsFrom(s).xp >= 1000; } },
+    { id: "high20", name: "高分一刻", desc: "单次获得过 20 分及以上", icon: "🎯", test: function (s) { return s.tasks.some(function (t) { return t.points >= 20; }); } },
+    { id: "crit1", name: "抽到顶格", desc: "在某个区间抽到过最高分", icon: "💥", test: function (s) { return s.tasks.some(function (t) { return t.rank === "crit"; }); } },
+  ];
+
+  const DEFAULT_REWARDS = [
+    { id: "d1", name: "一杯平时会犹豫的饮料", description: "不是日常续命咖啡，是想喝很久却总觉得没必要的那杯。", price: 35, cat: "small" },
+    { id: "d2", name: "一份喜欢的小甜品", description: "专门为自己点的，不是顺手带的。", price: 55, cat: "small" },
+    { id: "d3", name: "一个一直想买的小物件", description: "金额不大，但一直拖着没买的那种。", price: 90, cat: "mid" },
+    { id: "d4", name: "一顿特别想吃的饭", description: "认真挑一家店，专门去吃。", price: 160, cat: "mid" },
+    { id: "d5", name: "买一本想看很久的书", description: "或者一份课程、一张票，算兴趣投资。", price: 180, cat: "mid" },
+    { id: "d6", name: "一直想要的一件东西", description: "真正攒一攒才换的大型奖励。", price: 400, cat: "large" },
+  ];
+
+  const WISH_CATS = { buy: "🛍️ 想买", eat: "🍴 想吃", hobby: "🎨 兴趣", exp: "🎟️ 体验", other: "🌟 其他" };
+
+  function uid() {
+    return (crypto.randomUUID && crypto.randomUUID()) || ("id_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  }
+  function ymd(d) {
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function todayKey() { return ymd(new Date()); }
+  function levelById(id) { return LEVELS.find(function (l) { return l.id === id; }) || LEVELS[2]; }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function fmt(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return (d.getMonth() + 1) + "/" + d.getDate() + " " + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  function rankFor(points, level) {
+    var lv = level || { min: 1, max: 10 };
+    var span = Math.max(1, lv.max - lv.min);
+    var pct = (points - lv.min) / span;
+    var key = "ok";
+    if (points >= lv.max || pct >= 0.95) key = "crit";
+    else if (pct >= 0.8) key = "boost";
+    else if (pct >= 0.6) key = "high";
+    else if (pct >= 0.4) key = "ok";
+    else if (pct >= 0.2) key = "steady";
+    else key = "tiny";
+    return { key: key, title: RANK_TITLES[key], msgs: RANK_MSGS[key], pct: pct };
+  }
+
+  function levelFromXp(totalXp) {
+    var remaining = totalXp;
+    var lv = 1, name = LEVEL_NAMES[0].name, need = LEVEL_NAMES[0].need;
+    for (var i = 0; i < LEVEL_NAMES.length; i++) {
+      need = LEVEL_NAMES[i].need;
+      name = LEVEL_NAMES[i].name;
+      lv = LEVEL_NAMES[i].lv;
+      if (remaining < need) return { lv: lv, name: name, into: remaining, need: need, totalXp: totalXp };
+      remaining -= need;
+    }
+    while (remaining >= need) {
+      remaining -= need;
+      lv++;
+      need = Math.round(need * 1.15);
+      name = "持续行动者";
+    }
+    return { lv: lv, name: name, into: remaining, need: need, totalXp: totalXp };
+  }
+
+  function empty() {
+    return {
+      version: 2,
+      rewards: DEFAULT_REWARDS.map(function (r) { return Object.assign({}, r); }),
+      tasks: [],
+      redemptions: [],
+      achievements: [],
+      wishes: [],
+      totalPointsEarned: 0,
+      lastResult: null,
+    };
+  }
+
+  function migrate(raw) {
+    if (!raw || typeof raw !== "object") return empty();
+    var body = raw.state || raw;
+    var base = empty();
+    var next = Object.assign(base, body, {
+      rewards: Array.isArray(body.rewards) && body.rewards.length ? body.rewards : base.rewards,
+      tasks: Array.isArray(body.tasks) ? body.tasks : [],
+      redemptions: Array.isArray(body.redemptions) ? body.redemptions : [],
+      achievements: Array.isArray(body.achievements) ? body.achievements : [],
+      wishes: Array.isArray(body.wishes) ? body.wishes : [],
+    });
+    // normalize old tasks: ensure xp equals points if missing
+    next.tasks = next.tasks.map(function (t) {
+      var xp = t.xp != null ? t.xp : t.points;
+      if (t.fromBox) xp = 0;
+      return Object.assign({}, t, { xp: xp });
+    });
+    return next;
+  }
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY) || localStorage.getItem(KEY_LEGACY);
+      if (!raw) return empty();
+      return migrate(JSON.parse(raw));
+    } catch (e) { return empty(); }
+  }
+  function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+
+  function totalsFrom(s) {
+    var earned = s.tasks.reduce(function (a, t) { return a + (t.points || 0); }, 0);
+    var redeemed = s.redemptions.reduce(function (a, t) { return a + (t.points || 0); }, 0);
+    var xp = s.tasks.reduce(function (a, t) {
+      if (t.fromBox) return a;
+      return a + (t.xp != null ? t.xp : (t.points || 0));
+    }, 0);
+    return {
+      totalEarned: earned,
+      totalRedeemed: redeemed,
+      balance: earned - redeemed,
+      taskCount: s.tasks.filter(function (t) { return !t.fromBox; }).length,
+      xp: xp,
+    };
+  }
+  function totals() { return totalsFrom(state); }
+
+  function todayStats() {
+    var k = todayKey();
+    var list = state.tasks.filter(function (t) { return !t.fromBox && t.time.slice(0, 10) === k; });
+    var pts = list.reduce(function (a, t) { return a + t.points; }, 0);
+    var xp = list.reduce(function (a, t) { return a + (t.xp != null ? t.xp : t.points); }, 0);
+    var max = list.length ? Math.max.apply(null, list.map(function (t) { return t.points; })) : 0;
+    var achToday = (state.achievements || []).filter(function (a) { return (a.at || "").slice(0, 10) === k; }).length;
+    return { count: list.length, pts: pts, xp: xp, max: max, achToday: achToday };
+  }
+
+  function weekCount() {
+    var now = new Date();
+    var start = new Date(now);
+    var day = start.getDay();
+    start.setDate(start.getDate() + (day === 0 ? -6 : 1 - day));
+    start.setHours(0, 0, 0, 0);
+    return state.tasks.filter(function (t) { return !t.fromBox && new Date(t.time) >= start; }).length;
+  }
+
+  function rollPoints(level) {
+    var lv = level || chosen || LEVELS[2];
+    return lv.min + Math.floor(Math.random() * (lv.max - lv.min + 1));
+  }
+
+  function evaluateTaskLocal(raw) {
+    var t = raw.trim();
+    var metrics = { time: 2, start: 2, attention: 2, focus: 2, mental: 2, think: 2, social: 1, delay: 2, scale: 2 };
+    if (/小时|半天|整天|一天/.test(t)) { metrics.time = 5; metrics.scale = 5; metrics.focus = 4; }
+    else if (/半小时|30分钟|一小时/.test(t)) { metrics.time = 4; metrics.scale = 3; }
+    else if (/分钟|很快|马上/.test(t)) { metrics.time = 1; metrics.start = 1; }
+    if (/(方案|论文|项目|报告|总结|复杂|设计)/.test(t)) {
+      metrics.think = 5; metrics.attention = 4; metrics.focus = 4; metrics.scale = Math.max(metrics.scale, 4); metrics.mental = 4;
+    }
+    if (/(开会|面试|沟通|打电话|回复|消息)/.test(t)) {
+      metrics.social = 4; metrics.mental = 3; metrics.start = Math.max(metrics.start, 3);
+    }
+    if (/(学习|复习|背|写作|锻炼|阅读)/.test(t)) { metrics.attention = 3; metrics.focus = 3; metrics.delay = 3; }
+    if (/(桌面|洗碗|单词|散步|收拾|整理|洗)/.test(t)) {
+      metrics.start = 2; metrics.time = Math.min(metrics.time, 2); metrics.scale = Math.min(metrics.scale, 2); metrics.mental = 1;
+    }
+    if (/(喝水|洗脸|刷牙|伸懒腰|开窗|洗杯子)/.test(t)) {
+      metrics.time = 1; metrics.start = 1; metrics.attention = 1; metrics.focus = 1;
+      metrics.mental = 1; metrics.think = 1; metrics.social = 1; metrics.delay = 1; metrics.scale = 1;
+    }
+    if (/(拖延|一直没|好久没|不想)/.test(t)) metrics.delay = 5;
+    if (t.length <= 3) { metrics.scale = Math.min(metrics.scale, 1); metrics.time = Math.min(metrics.time, 2); }
+    if (t.length >= 24) { metrics.scale = Math.max(metrics.scale, 3); metrics.think = Math.max(metrics.think, 3); }
+
+    var score = metrics.time * 3 + metrics.start * 3 + metrics.attention * 2 + metrics.focus * 2 +
+      metrics.mental * 2 + metrics.think * 3 + metrics.social * 2 + metrics.delay * 2 + metrics.scale * 3;
+    var id = "normal";
+    if (score <= 28) id = "micro";
+    else if (score <= 40) id = "light";
+    else if (score <= 55) id = "normal";
+    else if (score <= 72) id = "hard";
+    else id = "chunk";
+
+    var reasons = {
+      micro: "整体行动成本很低，几分钟内就能完成。",
+      light: "路径清楚，需要专门花一点时间，但阻力不大。",
+      normal: "需要一段明确工作，并有一定注意力成本。",
+      hard: "启动或持续专注成本更明显。",
+      chunk: "规模较大，做完会有实感。",
+    };
+    var labels = {
+      time: "预计耗时", start: "启动难度", attention: "注意力", focus: "持续专注",
+      mental: "心理阻力", think: "复杂思考", social: "沟通协作", delay: "拖延倾向", scale: "任务规模",
+    };
+    return { level: id, reason: reasons[id], metrics: metrics, labels: labels, score: score };
+  }
+
+  function priceRewardLocal(name, desc, cat) {
+    var t = name + " " + desc;
+    var price = cat === "large" ? 320 : cat === "mid" ? 120 : 45;
+    if (/(甜品|饮料|咖啡|奶茶)/.test(t)) price = 45;
+    if (/(书|课|票)/.test(t)) price = 150;
+    if (/(饭|餐|火锅)/.test(t)) price = 180;
+    if (/(旅行|出游|大件|一直想要)/.test(t)) price = 400;
+    return Math.max(15, Math.round(price / 5) * 5);
+  }
+
+  var state = load();
+  var chosen = null;
+  var aiReason = "";
+  var lastEval = null;
+  var rewardCat = "small";
+  var drawing = false;
+  var range = "day";
+  var chartMetric = "points";
+  var editingId = null;
+  var toastTimer = 0;
+  var dlgYes = null;
+  var todayPanel = null;
+  var wishCat = "buy";
+  var editWishCat = "buy";
+  var editingWishId = null;
+  var wishImgData = "";
+  var editWishImgData = null;
+
+  function toast(msg) {
+    var el = document.querySelector(".toast");
+    if (!el) { el = document.createElement("div"); el.className = "toast"; document.body.appendChild(el); }
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.style.display = "none"; }, 2400);
+  }
+
+  function setOrbText(text, rolling) {
+    var orb = $("orb");
+    orb.classList.remove("rolling", "land", "crit");
+    orb.innerHTML = '<span class="orb-num">' + text + "</span>";
+    if (rolling) { void orb.offsetWidth; orb.classList.add("rolling"); }
+  }
+
+  function burst(crit) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var layer = document.createElement("div");
+    layer.className = "burst";
+    var rect = $("orb").getBoundingClientRect();
+    var cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    var n = crit ? 16 : 8;
+    for (var i = 0; i < n; i++) {
+      var p = document.createElement("i");
+      var ang = (Math.PI * 2 * i) / n + Math.random() * 0.4;
+      var dist = 40 + Math.random() * (crit ? 90 : 55);
+      p.style.left = cx + "px";
+      p.style.top = cy + "px";
+      p.style.setProperty("--dx", Math.cos(ang) * dist + "px");
+      p.style.setProperty("--dy", Math.sin(ang) * dist + "px");
+      p.style.background = crit && i % 2 ? "var(--accent)" : "var(--primary)";
+      layer.appendChild(p);
+    }
+    document.body.appendChild(layer);
+    setTimeout(function () { layer.remove(); }, 900);
+  }
+
+  function checkAchievements() {
+    var unlocked = {};
+    (state.achievements || []).forEach(function (a) { unlocked[a.id] = true; });
+    var neu = [];
+    ACHIEVEMENTS.forEach(function (a) {
+      if (!unlocked[a.id] && a.test(state)) {
+        var row = { id: a.id, at: new Date().toISOString() };
+        state.achievements.push(row);
+        neu.push(a);
+      }
+    });
+    return neu;
+  }
+
+  function renderHero() {
+    var t = totals();
+    var lv = levelFromXp(t.xp);
+    var ts = todayStats();
+    $("lv-title").textContent = "Lv." + lv.lv + " " + lv.name;
+    $("lv-sub").textContent = "累计 " + t.xp + " XP · 完成 " + t.taskCount + " 次行动";
+    var pct = Math.min(100, Math.round((lv.into / lv.need) * 100));
+    $("xp-fill").style.width = pct + "%";
+    $("xp-text").textContent = lv.into + " / " + lv.need + " XP";
+    $("xp-left").textContent = "距离下一级还差 " + Math.max(0, lv.need - lv.into) + " XP";
+    $("balance").textContent = t.balance;
+    if ($("chip-earned")) $("chip-earned").textContent = "累计获得 " + t.totalEarned;
+    if ($("chip-spent")) $("chip-spent").textContent = "已兑换 " + t.totalRedeemed;
+    $("chip-today").textContent = "今日 " + ts.count + " 次";
+    $("chip-week").textContent = "本周 " + weekCount() + " 次";
+    $("today-count").textContent = ts.count;
+    $("today-pts").textContent = ts.pts;
+    $("today-xp").textContent = ts.xp;
+    $("today-max").textContent = ts.count ? ts.max : "—";
+    $("today-ach").textContent = ts.achToday;
+    $("all-count").textContent = t.taskCount;
+    var line = "还没有记录。做完一件，这里会出现一句简短反馈。";
+    if (ts.count >= 5) line = "今天完成了 " + ts.count + " 个小行动，这本身就是一次推进。";
+    else if (ts.count >= 3) line = "今天不是靠爆发，是靠一点一点完成的。";
+    else if (ts.count >= 1) line = "今天已经开始了。继续做下一件也行，停在这里也行。";
+    $("today-line").textContent = line;
+    if (state.lastResult) {
+      var lr = state.lastResult;
+      $("last-result").classList.remove("hidden");
+      $("last-result").innerHTML = "最近一次：<b style='color:var(--primary)'>+" + lr.points + "</b> 分 · +" +
+        (lr.xp != null ? lr.xp : lr.points) + " XP · " + escapeHtml(lr.title) +
+        (lr.task ? "<br><span style='font-size:12px'>" + escapeHtml(lr.task) + "</span>" : "");
+    } else $("last-result").classList.add("hidden");
+  }
+
+  function renderLevels() {
+    $("levels").innerHTML = LEVELS.map(function (l) {
+      return '<button class="level' + (chosen && chosen.id === l.id ? " on" : "") + '" data-id="' + l.id + '">' +
+        '<span class="lv-name">' + l.name + "</span>" +
+        '<span class="lv-xp">' + l.min + "–" + l.max + " 分</span>" +
+        '<span class="lv-hint">' + l.hint + "</span></button>";
+    }).join("");
+    $("levels").querySelectorAll("button").forEach(function (btn) {
+      btn.onclick = function () {
+        chosen = levelById(btn.dataset.id);
+        renderLevels();
+        updateDraw();
+      };
+    });
+  }
+
+  function updateDraw() {
+    var ready = $("task").value.trim() && chosen && !drawing && !$("result-panel").classList.contains("ok-done");
+    $("btn-draw").disabled = !ready;
+    $("range-text").textContent = chosen
+      ? ("难度：" + chosen.name + " · 抽 " + chosen.min + "–" + chosen.max + " 分（同时获得等量 XP）")
+      : "选好档位后，做完再点下面的按钮。";
+  }
+
+  function buckets(kind) {
+    var now = new Date(), map = {}, out = [];
+    function val(t) {
+      if (chartMetric === "xp") return t.fromBox ? 0 : (t.xp != null ? t.xp : t.points || 0);
+      return t.points || 0;
+    }
+    if (kind === "day") {
+      state.tasks.forEach(function (t) { var k = t.time.slice(0, 10); map[k] = (map[k] || 0) + val(t); });
+      for (var i = 13; i >= 0; i--) {
+        var d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+        var k = ymd(d);
+        out.push({ label: (d.getMonth() + 1) + "/" + d.getDate(), points: map[k] || 0 });
+      }
+    } else if (kind === "week") {
+      function sow(d0) {
+        var x = new Date(d0); x.setHours(0, 0, 0, 0);
+        var day = x.getDay(); x.setDate(x.getDate() + (day === 0 ? -6 : 1 - day));
+        return x;
+      }
+      state.tasks.forEach(function (t) { var k = ymd(sow(new Date(t.time))); map[k] = (map[k] || 0) + val(t); });
+      var end = sow(now);
+      for (var i = 11; i >= 0; i--) {
+        var d = new Date(end); d.setDate(end.getDate() - i * 7);
+        var k = ymd(d);
+        out.push({ label: (d.getMonth() + 1) + "/" + d.getDate(), points: map[k] || 0 });
+      }
+    } else {
+      state.tasks.forEach(function (t) {
+        var d = new Date(t.time);
+        var k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        map[k] = (map[k] || 0) + val(t);
+      });
+      for (var i = 11; i >= 0; i--) {
+        var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        var k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+        out.push({ label: d.getFullYear() + "." + (d.getMonth() + 1), points: map[k] || 0 });
+      }
+    }
+    return out;
+  }
+
+  function renderChart() {
+    var data = buckets(range);
+    var max = Math.max(1, Math.max.apply(null, data.map(function (d) { return d.points; })));
+    if (!data.some(function (d) { return d.points > 0; })) {
+      $("chart").innerHTML = '<div class="empty">完成第一件事后，这里会出现积分 / XP 趋势。</div>';
+      return;
+    }
+    $("chart").innerHTML = '<div class="chart">' + data.map(function (d) {
+      var h = Math.max(2, Math.round((d.points / max) * 110));
+      return '<div class="bar"><i style="height:' + h + 'px"></i><span>' + d.label + "</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function catLabel(c) { return c === "large" ? "大型" : c === "mid" ? "中型" : "小型"; }
+
+  function renderShop() {
+    var t = totals();
+    var sorted = state.rewards.slice().sort(function (a, b) { return (a.price || 0) - (b.price || 0); });
+    $("shop").innerHTML = sorted.map(function (r) {
+      var enough = t.balance >= r.price;
+      return '<div class="reward"><div class="reward-main">' +
+        '<span class="reward-tag cat-' + (r.cat || "mid") + '">' + catLabel(r.cat || "mid") + "</span>" +
+        '<div class="reward-name">' + escapeHtml(r.name) + "</div>" +
+        (r.description ? '<div class="desc">' + escapeHtml(r.description) + "</div>" : "") +
+        '<div class="price">' + r.price + " 分</div></div>" +
+        '<div class="reward-actions">' +
+        '<button class="btn ghost" data-edit="' + r.id + '">修改</button>' +
+        '<button class="btn" data-buy="' + r.id + '"' + (enough ? "" : " disabled") + ">" + (enough ? "兑换" : "积分不足") + "</button>" +
+        "</div></div>";
+    }).join("");
+    $("shop").querySelectorAll("[data-buy]").forEach(function (btn) {
+      btn.onclick = function () { buy(btn.getAttribute("data-buy")); };
+    });
+    $("shop").querySelectorAll("[data-edit]").forEach(function (btn) {
+      btn.onclick = function () { openEdit(btn.getAttribute("data-edit")); };
+    });
+  }
+
+  function renderAchs() {
+    var unlocked = {};
+    (state.achievements || []).forEach(function (a) { unlocked[a.id] = true; });
+    $("achs").innerHTML = ACHIEVEMENTS.map(function (a) {
+      var on = !!unlocked[a.id];
+      return '<div class="ach ' + (on ? "on" : "locked") + '"><div class="ach-ico">' + a.icon +
+        '</div><div><div class="ach-title">' + a.name + (on ? "" : " · 未解锁") +
+        '</div><div class="ach-desc">' + a.desc + "</div></div></div>";
+    }).join("");
+  }
+
+  function renderHistory() {
+    var tasks = state.tasks.filter(function (t) { return !t.fromBox; }).slice(0, 10);
+    var red = state.redemptions.slice(0, 6);
+    $("recent-tasks").innerHTML = tasks.length
+      ? tasks.map(function (t) {
+          return '<div class="hist"><div><div>' + escapeHtml(t.task) + '</div><div class="desc">' +
+            escapeHtml(t.title || "") + " · +" + (t.xp != null ? t.xp : t.points) + " XP · " + fmt(t.time) +
+            '</div></div><b>+' + t.points + "</b></div>";
+        }).join("")
+      : '<p class="desc">还没有记录。</p>';
+    $("recent-redeem").innerHTML = red.length
+      ? red.map(function (t) {
+          return '<div class="hist"><div><div>' + escapeHtml(t.rewardName) + '</div><div class="desc">' +
+            fmt(t.time) + '</div></div><b style="color:var(--muted)">−' + t.points + "</b></div>";
+        }).join("")
+      : '<p class="desc">还没有兑换。</p>';
+  }
+
+  // —— Wishes ——
+  function setToggleBtn(btn, on, onText, offText) {
+    btn.dataset.on = on ? "1" : "0";
+    btn.textContent = on ? onText : offText;
+    btn.classList.toggle("on", !!on);
+  }
+  function readImage(file, cb) {
+    if (!file) return cb("");
+    if (file.size > 1.2e6) { toast("图片稍大，请选 1MB 以内的图。"); return cb(""); }
+    var reader = new FileReader();
+    reader.onload = function () { cb(String(reader.result || "")); };
+    reader.onerror = function () { cb(""); };
+    reader.readAsDataURL(file);
+  }
+  function wishProgress(w, balance) {
+    var target = Math.max(1, Number(w.target) || 1);
+    var pct = Math.min(100, Math.round((balance / target) * 100));
+    var left = Math.max(0, target - balance);
+    var ready = balance >= target && w.status !== "achieved";
+    return { target: target, pct: pct, left: left, ready: ready, full: balance >= target };
+  }
+  function focusWish(balance) {
+    var active = (state.wishes || []).filter(function (w) { return w.status !== "achieved" && !w.paused; });
+    if (!active.length) return null;
+    var pinned = active.find(function (w) { return w.pinned; });
+    if (pinned) return pinned;
+    return active.slice().sort(function (a, b) {
+      var pa = wishProgress(a, balance), pb = wishProgress(b, balance);
+      if (pb.pct !== pa.pct) return pb.pct - pa.pct;
+      return pa.left - pb.left;
+    })[0];
+  }
+  function wishCardHtml(w, balance) {
+    var p = wishProgress(w, balance);
+    var done = w.status === "achieved";
+    var cls = ["wish-card"];
+    if (done) cls.push("done");
+    if (p.ready) cls.push("ready");
+    if (w.paused) cls.push("paused");
+    if (p.ready) cls.push("wish-celebrate");
+    var ico = w.image
+      ? '<div class="wish-ico"><img src="' + w.image + '" alt="" /></div>'
+      : '<div class="wish-ico">' + escapeHtml((WISH_CATS[w.cat] || "🌟").slice(0, 2)) + "</div>";
+    var tags = ['<span>' + escapeHtml(WISH_CATS[w.cat] || "其他") + "</span>"];
+    if (w.pinned) tags.push("<span>⭐ 置顶</span>");
+    if (w.longTerm) tags.push("<span>🌟 长期</span>");
+    if (w.paused) tags.push("<span>已暂停</span>");
+    if (done) tags.push("<span>✅ 已实现</span>");
+    var meta = done
+      ? '<span class="ok">🎉 已达成</span><span>' + (w.achievedAt ? fmt(w.achievedAt) : "") + "</span>"
+      : p.ready
+        ? '<span class="ok">🎉 可以兑换了</span><span>目标 ' + p.target + " 分</span>"
+        : "<span>" + p.pct + "% · 还差 " + p.left + " 积分</span><span>目标 " + p.target + "</span>";
+    var actions = done
+      ? '<button class="btn ghost" data-wedit="' + w.id + '">查看/编辑</button>'
+      : '<button class="btn ghost" data-wedit="' + w.id + '">编辑</button>' +
+        '<button class="btn" data-wredeem="' + w.id + '"' + (p.ready ? "" : " disabled") + ">" +
+        (p.ready ? "兑换愿望" : "还差 " + p.left) + "</button>";
+    var showCur = done ? p.target : Math.min(balance, p.target);
+    return '<div class="' + cls.join(" ") + '"><div class="wish-top">' + ico +
+      '<div style="min-width:0;flex:1"><div class="wish-name">' + escapeHtml(w.name) + "</div>" +
+      '<div class="wish-tags">' + tags.join("") + "</div>" +
+      (w.note ? '<div class="wish-note">' + escapeHtml(w.note) + "</div>" : "") +
+      '</div></div><div class="wish-progress-row"><b>' + showCur + " / " + p.target +
+      "</b><span>" + (done ? "已实现" : (p.ready ? "已攒够" : "")) + "</span></div>" +
+      '<div class="wish-bar ' + (p.full || done ? "full" : "") + '"><i style="width:' + (done || p.full ? 100 : p.pct) +
+      '%"></i></div><div class="wish-meta">' + meta + '</div><div class="wish-actions">' + actions + "</div></div>";
+  }
+  function renderWishes() {
+    if (!$("wish-active")) return;
+    var balance = totals().balance;
+    var all = state.wishes || [];
+    var active = all.filter(function (w) { return w.status !== "achieved"; });
+    var done = all.filter(function (w) { return w.status === "achieved"; });
+    var focus = focusWish(balance);
+    if (focus) {
+      $("wish-focus").innerHTML = '<div class="wish-focus"><p class="wf-label">' +
+        (focus.pinned ? "⭐ 置顶目标" : "⭐ 最近目标") + "</p>" + wishCardHtml(focus, balance) + "</div>";
+    } else if (!active.length && !done.length) {
+      $("wish-focus").innerHTML = '<p class="desc" style="margin:0">还没有愿望。加一个真正想要的东西，让积分有个方向。</p>';
+    } else if (!active.length) {
+      $("wish-focus").innerHTML = '<p class="desc" style="margin:0">当前没有进行中的愿望。</p>';
+    } else $("wish-focus").innerHTML = "";
+    var rest = active.filter(function (w) { return !focus || w.id !== focus.id; });
+    rest.sort(function (a, b) {
+      var pa = wishProgress(a, balance), pb = wishProgress(b, balance);
+      if (pa.ready !== pb.ready) return pa.ready ? -1 : 1;
+      return pb.pct - pa.pct;
+    });
+    $("wish-active").innerHTML = rest.map(function (w) { return wishCardHtml(w, balance); }).join("");
+    if (done.length) {
+      $("wish-done-title").classList.remove("hidden");
+      $("wish-done-title").textContent = "已实现愿望 · " + done.length;
+      $("wish-done").innerHTML = done.slice().sort(function (a, b) {
+        return (b.achievedAt || "").localeCompare(a.achievedAt || "");
+      }).map(function (w) { return wishCardHtml(w, balance); }).join("");
+    } else {
+      $("wish-done-title").classList.add("hidden");
+      $("wish-done").innerHTML = "";
+    }
+    document.querySelectorAll("[data-wedit]").forEach(function (btn) {
+      btn.onclick = function () { openWishEdit(btn.getAttribute("data-wedit")); };
+    });
+    document.querySelectorAll("[data-wredeem]").forEach(function (btn) {
+      btn.onclick = function () { redeemWish(btn.getAttribute("data-wredeem")); };
+    });
+  }
+
+  function renderAll() {
+    renderHero();
+    renderChart();
+    renderShop();
+    renderWishes();
+    renderAchs();
+    renderHistory();
+    updateDraw();
+  }
+
+  function showLevels(fromAi) {
+    $("level-box").classList.remove("hidden");
+    if (fromAi && chosen && lastEval) {
+      var m = lastEval.metrics, labels = lastEval.labels;
+      var metricHtml = Object.keys(labels).map(function (k) {
+        var v = m[k];
+        var cls = v >= 4 ? "up" : v <= 1 ? "down" : "";
+        return '<div class="metric ' + cls + '">' + labels[k] + " <b>" + v + "/5</b></div>";
+      }).join("");
+      $("suggest").innerHTML =
+        "建议：<b>" + chosen.name + "</b>（抽 " + chosen.min + "–" + chosen.max + " 分，并获得等量 XP）" +
+        '<div class="desc">' + aiReason + "</div>" +
+        '<div class="metric-grid">' + metricHtml + "</div>" +
+        '<p class="hint" style="margin-top:0.55rem">综合参考九项成本。可手动改档。</p>';
+    } else {
+      lastEval = null;
+      $("suggest").innerHTML = '<div class="desc" style="margin:0">选一个差不多的就行。不同难度对应不同积分区间。</div>';
+    }
+    renderLevels();
+    updateDraw();
+  }
+
+  function resetDrawVisual() {
+    drawing = false;
+    setOrbText("?", false);
+    $("result-panel").classList.add("hidden");
+    $("result-panel").classList.remove("ok-done");
+    $("next-row").classList.add("hidden");
+    $("btn-draw").textContent = "完成了，抽积分";
+    updateDraw();
+  }
+
+  function finish(name, points) {
+    var rank = rankFor(points, chosen);
+    var isCrit = rank.key === "crit";
+    var xpGain = points; // 等量 XP，永久
+    var prevXp = totals().xp;
+    state.tasks.unshift({
+      id: uid(), task: name, level: chosen.id, points: points, xp: xpGain,
+      rank: rank.key, title: rank.title, time: new Date().toISOString(),
+    });
+    state.totalPointsEarned = (state.totalPointsEarned || 0) + points;
+    state.lastResult = { points: points, xp: xpGain, title: rank.title, task: name, time: new Date().toISOString() };
+    var newAchs = checkAchievements();
+    var prevLv = levelFromXp(prevXp).lv;
+    var nextLv = levelFromXp(totals().xp).lv;
+    save();
+    drawing = false;
+    setOrbText("+" + points, false);
+    void $("orb").offsetWidth;
+    $("orb").classList.add(isCrit ? "crit" : "land");
+    burst(isCrit);
+    $("result-title").className = "result-title" + (isCrit ? " crit" : "");
+    $("result-title").textContent = (isCrit ? "行动暴击 · " : "") + rank.title + " · +" + points + " 分";
+    $("result-msg").textContent = pick(rank.msgs);
+    $("result-extra").textContent = "同时 +" + xpGain + " XP（永久累计，兑换不减少）";
+    $("result-panel").classList.remove("hidden");
+    $("result-panel").classList.add("ok-done");
+    $("next-row").classList.remove("hidden");
+    $("btn-draw").textContent = "完成了，抽积分";
+    renderAll();
+    $("balance").classList.remove("pop");
+    void $("balance").offsetWidth;
+    $("balance").classList.add("pop");
+    if (navigator.vibrate) try { navigator.vibrate(isCrit ? [20, 40, 20, 40, 30] : [12, 40, 18]); } catch (e) {}
+    if (nextLv > prevLv) setTimeout(function () { toast("升级了！Lv." + prevLv + " → Lv." + nextLv); }, 400);
+    else if (newAchs.length) toast("解锁：" + newAchs[0].name);
+    else toast(rank.title + " · +" + points + " 分 · +" + xpGain + " XP");
+  }
+
+  // events
+  $("btn-ai").onclick = function () {
+    var name = $("task").value.trim();
+    if (!name) return toast("先写下要做的事。");
+    var r = evaluateTaskLocal(name);
+    chosen = levelById(r.level);
+    lastEval = r;
+    aiReason = r.reason;
+    resetDrawVisual();
+    showLevels(true);
+  };
+  $("btn-pick").onclick = function () {
+    var name = $("task").value.trim();
+    if (!name) return toast("先写下要做的事。");
+    aiReason = "";
+    showLevels(false);
+  };
+  $("task").addEventListener("input", function () {
+    if ($("result-panel").classList.contains("ok-done")) resetDrawVisual();
+    updateDraw();
+  });
+  $("btn-draw").onclick = function () {
+    var name = $("task").value.trim();
+    if (!name || !chosen || drawing) return;
+    var ae = document.activeElement;
+    if (ae && ae.blur) ae.blur();
+    var final = rollPoints(chosen);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return finish(name, final);
+    drawing = true;
+    $("btn-draw").disabled = true;
+    $("btn-draw").textContent = "抽取中…";
+    var flashes = [];
+    for (var i = 0; i < 10; i++) flashes.push(chosen.min + Math.floor(Math.random() * (chosen.max - chosen.min + 1)));
+    flashes.push(final);
+    flashes.forEach(function (n, idx) {
+      setTimeout(function () {
+        setOrbText(String(n), true);
+        if (idx === flashes.length - 1) finish(name, final);
+      }, 60 + idx * 85);
+    });
+  };
+  $("btn-next").onclick = function () {
+    $("task").value = "";
+    chosen = null;
+    aiReason = "";
+    $("level-box").classList.add("hidden");
+    resetDrawVisual();
+  };
+
+  document.querySelectorAll(".tabs button").forEach(function (btn) {
+    btn.onclick = function () {
+      if (btn.dataset.metric) {
+        chartMetric = btn.dataset.metric;
+        document.querySelectorAll(".tabs button[data-metric]").forEach(function (b) { b.classList.toggle("on", b === btn); });
+      }
+      if (btn.dataset.range) {
+        range = btn.dataset.range;
+        document.querySelectorAll(".tabs button[data-range]").forEach(function (b) { b.classList.toggle("on", b === btn); });
+      }
+      renderChart();
+    };
+  });
+
+  document.querySelectorAll(".cat-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      rewardCat = btn.dataset.cat;
+      document.querySelectorAll(".cat-btn").forEach(function (b) { b.classList.toggle("on", b === btn); });
+    };
+  });
+
+  function buy(id) {
+    var reward = state.rewards.find(function (r) { return r.id === id; });
+    if (!reward) return;
+    if (totals().balance < reward.price) return toast("积分还不够，再推进几步就好。");
+    state.redemptions.unshift({
+      id: uid(), rewardId: reward.id, rewardName: reward.name, points: reward.price, time: new Date().toISOString(),
+    });
+    save();
+    toast("兑换了「" + reward.name + "」。");
+    renderAll();
+  }
+  function openEdit(id) {
+    var r = state.rewards.find(function (x) { return x.id === id; });
+    if (!r) return;
+    editingId = id;
+    $("e-name").value = r.name;
+    $("e-desc").value = r.description || "";
+    $("e-price").value = r.price;
+    $("edit").showModal();
+  }
+  $("e-save").onclick = function () {
+    var r = state.rewards.find(function (x) { return x.id === editingId; });
+    var price = Number($("e-price").value);
+    if (!r || !$("e-name").value.trim() || !isFinite(price) || price <= 0) return toast("名称和价格都需要填好。");
+    r.name = $("e-name").value.trim();
+    r.description = $("e-desc").value.trim();
+    r.price = Math.round(price);
+    save();
+    $("edit").close();
+    toast("已保存。");
+    renderAll();
+  };
+  $("e-del").onclick = function () {
+    state.rewards = state.rewards.filter(function (x) { return x.id !== editingId; });
+    save();
+    $("edit").close();
+    toast("已移除。");
+    renderAll();
+  };
+  $("btn-price-ai").onclick = function () {
+    var name = $("r-name").value.trim();
+    if (!name) return toast("先写奖励名称。");
+    var p = priceRewardLocal(name, $("r-desc").value, rewardCat);
+    $("r-price").value = p;
+    $("r-hint").textContent = "建议 " + p + " 分（可改）。";
+  };
+  $("btn-add").onclick = function () {
+    var name = $("r-name").value.trim();
+    if (!name) return toast("先写奖励名称。");
+    var price = Number($("r-price").value);
+    if (!isFinite(price) || price <= 0) price = priceRewardLocal(name, $("r-desc").value, rewardCat);
+    state.rewards.push({ id: uid(), name: name, description: $("r-desc").value.trim(), price: Math.round(price), cat: rewardCat });
+    save();
+    $("r-name").value = $("r-desc").value = $("r-price").value = "";
+    $("r-hint").textContent = "";
+    $("add-box").classList.add("collapsed");
+    toast("奖励已添加。");
+    renderAll();
+  };
+  $("btn-toggle-add").onclick = function () {
+    var box = $("add-box");
+    var open = box.classList.contains("collapsed");
+    box.classList.toggle("collapsed", !open);
+  };
+
+  // today detail
+  function todayTasks() {
+    var k = todayKey();
+    return state.tasks.filter(function (t) { return !t.fromBox && t.time.slice(0, 10) === k; });
+  }
+  function renderTodayDetail(kind) {
+    var box = $("today-detail");
+    if (!box) return;
+    document.querySelectorAll(".stat[data-today]").forEach(function (el) {
+      el.classList.toggle("on", el.getAttribute("data-today") === kind);
+    });
+    if (todayPanel === kind) {
+      box.classList.add("hidden"); box.innerHTML = ""; todayPanel = null;
+      document.querySelectorAll(".stat[data-today]").forEach(function (el) { el.classList.remove("on"); });
+      return;
+    }
+    todayPanel = kind;
+    var list = todayTasks();
+    if (kind === "count" || kind === "pts" || kind === "xp") {
+      if (!list.length) box.innerHTML = '<div class="td-title">今日还没有行动</div>';
+      else {
+        var title = kind === "count" ? "今日完成的行动" : kind === "pts" ? "今日积分来源" : "今日经验来源";
+        box.innerHTML = '<div class="td-title">' + title + "</div>" + list.map(function (t) {
+          var extra = kind === "xp" ? ("+" + (t.xp != null ? t.xp : t.points) + " XP") : ("+" + t.points + " 分");
+          return '<div class="td-item"><div><div>' + escapeHtml(t.task) + '</div><div class="td-meta">' +
+            fmt(t.time) + " · " + escapeHtml(t.title || "") + '</div></div><div class="td-pts">' + extra + "</div></div>";
+        }).join("");
+      }
+    } else if (kind === "max") {
+      if (!list.length) box.innerHTML = '<div class="td-title">今日最高</div><div class="desc">还没有记录。</div>';
+      else {
+        var maxP = Math.max.apply(null, list.map(function (t) { return t.points; }));
+        box.innerHTML = '<div class="td-title">今日最高 · ' + maxP + " 分</div>" + list.filter(function (t) { return t.points === maxP; }).map(function (t) {
+          return '<div class="td-item"><div><div>' + escapeHtml(t.task) + '</div><div class="td-meta">' + fmt(t.time) +
+            " · " + escapeHtml(t.title || "") + '</div></div><div class="td-pts">+' + t.points + "</div></div>";
+        }).join("");
+      }
+    } else if (kind === "ach") {
+      var k = todayKey();
+      var rows = (state.achievements || []).filter(function (a) { return (a.at || "").slice(0, 10) === k; });
+      if (!rows.length) box.innerHTML = '<div class="td-title">今日新成就</div><div class="desc">今天还没有新解锁。</div>';
+      else box.innerHTML = '<div class="td-title">今日新成就</div>' + rows.map(function (a) {
+        var meta = ACHIEVEMENTS.find(function (x) { return x.id === a.id; });
+        return '<div class="td-item"><div><div>' + (meta ? meta.icon + " " + meta.name : a.id) +
+          '</div><div class="td-meta">' + (meta ? meta.desc : "") + " · " + fmt(a.at) + '</div></div></div>';
+      }).join("");
+    } else if (kind === "all") {
+      var recent = state.tasks.filter(function (t) { return !t.fromBox; }).slice(0, 8);
+      box.innerHTML = '<div class="td-title">累计行动 · ' + totals().taskCount + " 次</div>" +
+        (recent.length ? recent.map(function (t) {
+          return '<div class="td-item"><div><div>' + escapeHtml(t.task) + '</div><div class="td-meta">' +
+            fmt(t.time) + " · +" + t.points + " 分 · +" + (t.xp != null ? t.xp : t.points) + " XP</div></div></div>";
+        }).join("") : '<div class="desc">还没有记录。</div>');
+    }
+    box.classList.remove("hidden");
+  }
+  document.querySelectorAll(".stat[data-today]").forEach(function (btn) {
+    btn.onclick = function () { renderTodayDetail(btn.getAttribute("data-today")); };
+  });
+
+  // wish events
+  document.querySelectorAll(".wcat-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      wishCat = btn.dataset.wcat;
+      document.querySelectorAll(".wcat-btn").forEach(function (b) { b.classList.toggle("on", b === btn); });
+    };
+  });
+  document.querySelectorAll(".wecat-btn").forEach(function (btn) {
+    btn.onclick = function () {
+      editWishCat = btn.dataset.wcat;
+      document.querySelectorAll(".wecat-btn").forEach(function (b) { b.classList.toggle("on", b === btn); });
+    };
+  });
+  $("btn-toggle-wish").onclick = function () {
+    var box = $("wish-add-box");
+    var open = box.classList.contains("collapsed");
+    box.classList.toggle("collapsed", !open);
+  };
+  $("w-long").onclick = function () { setToggleBtn($("w-long"), $("w-long").dataset.on !== "1", "🌟 长期愿望", "标记长期愿望"); };
+  $("w-pin").onclick = function () { setToggleBtn($("w-pin"), $("w-pin").dataset.on !== "1", "⭐ 已置顶", "⭐ 置顶"); };
+  $("w-img").onchange = function () {
+    readImage(this.files && this.files[0], function (data) {
+      wishImgData = data;
+      var prev = $("w-img-preview");
+      if (data) { prev.src = data; prev.classList.add("show"); }
+      else { prev.classList.remove("show"); }
+    });
+  };
+  $("we-img").onchange = function () {
+    readImage(this.files && this.files[0], function (data) {
+      editWishImgData = data;
+      if (data) { $("we-img-preview").src = data; $("we-img-preview").classList.add("show"); }
+    });
+  };
+  $("we-long").onclick = function () { setToggleBtn($("we-long"), $("we-long").dataset.on !== "1", "🌟 长期愿望", "长期愿望"); };
+  $("we-pin").onclick = function () { setToggleBtn($("we-pin"), $("we-pin").dataset.on !== "1", "⭐ 已置顶", "⭐ 置顶"); };
+  $("we-pause").onclick = function () { setToggleBtn($("we-pause"), $("we-pause").dataset.on !== "1", "已暂停", "暂停"); };
+  $("btn-wish-add").onclick = function () {
+    var name = $("w-name").value.trim();
+    var target = Number($("w-target").value);
+    if (!name) return toast("先写愿望名称。");
+    if (!isFinite(target) || target < 1) return toast("请填写目标积分。");
+    var pinned = $("w-pin").dataset.on === "1";
+    if (pinned) (state.wishes || []).forEach(function (w) { if (w.status !== "achieved") w.pinned = false; });
+    if (!state.wishes) state.wishes = [];
+    state.wishes.unshift({
+      id: uid(), name: name, target: Math.round(target), cat: wishCat,
+      note: $("w-note").value.trim(), image: wishImgData || "",
+      pinned: pinned, longTerm: $("w-long").dataset.on === "1", paused: false,
+      status: "active", achievedAt: null, redeemedAt: null, createdAt: new Date().toISOString(),
+    });
+    save();
+    $("w-name").value = $("w-note").value = $("w-target").value = "";
+    wishImgData = "";
+    $("w-img-preview").classList.remove("show");
+    setToggleBtn($("w-long"), false, "🌟 长期愿望", "标记长期愿望");
+    setToggleBtn($("w-pin"), false, "⭐ 已置顶", "⭐ 置顶");
+    $("wish-add-box").classList.add("collapsed");
+    toast("愿望已加入清单。");
+    renderAll();
+  };
+  function openWishEdit(id) {
+    var w = (state.wishes || []).find(function (x) { return x.id === id; });
+    if (!w) return;
+    editingWishId = id;
+    editWishCat = w.cat || "other";
+    editWishImgData = null;
+    $("we-name").value = w.name;
+    $("we-target").value = w.target;
+    $("we-note").value = w.note || "";
+    document.querySelectorAll(".wecat-btn").forEach(function (b) { b.classList.toggle("on", b.dataset.wcat === editWishCat); });
+    setToggleBtn($("we-long"), !!w.longTerm, "🌟 长期愿望", "长期愿望");
+    setToggleBtn($("we-pin"), !!w.pinned, "⭐ 已置顶", "⭐ 置顶");
+    setToggleBtn($("we-pause"), !!w.paused, "已暂停", "暂停");
+    if (w.image) { $("we-img-preview").src = w.image; $("we-img-preview").classList.add("show"); }
+    else $("we-img-preview").classList.remove("show");
+    $("wish-edit").showModal();
+  }
+  function redeemWish(id) {
+    var w = (state.wishes || []).find(function (x) { return x.id === id; });
+    if (!w || w.status === "achieved") return;
+    var target = Math.max(1, Number(w.target) || 1);
+    if (totals().balance < target) return toast("积分还不够，再推进几步就好。");
+    confirm("兑换「" + w.name + "」？", "将扣除 " + target + " 积分。愿望进入已实现列表。XP 不变。", "确认兑换", function () {
+      state.redemptions.unshift({
+        id: uid(), rewardId: w.id, rewardName: "愿望：" + w.name, points: target,
+        time: new Date().toISOString(), kind: "wish",
+      });
+      w.status = "achieved";
+      w.achievedAt = new Date().toISOString();
+      w.redeemedAt = w.achievedAt;
+      w.pinned = false;
+      save();
+      toast("🎉 愿望已兑换：" + w.name);
+      renderAll();
+    });
+  }
+  $("we-save").onclick = function () {
+    var w = (state.wishes || []).find(function (x) { return x.id === editingWishId; });
+    if (!w) return;
+    var name = $("we-name").value.trim();
+    var target = Number($("we-target").value);
+    if (!name || !isFinite(target) || target < 1) return toast("名称和目标积分需要填好。");
+    var pinned = $("we-pin").dataset.on === "1";
+    if (pinned) (state.wishes || []).forEach(function (x) { if (x.id !== w.id && x.status !== "achieved") x.pinned = false; });
+    w.name = name; w.target = Math.round(target); w.cat = editWishCat;
+    w.note = $("we-note").value.trim();
+    w.pinned = pinned && w.status !== "achieved";
+    w.longTerm = $("we-long").dataset.on === "1";
+    w.paused = $("we-pause").dataset.on === "1";
+    if (editWishImgData !== null) w.image = editWishImgData;
+    save();
+    $("wish-edit").close();
+    toast("愿望已保存。");
+    renderAll();
+  };
+  $("we-del").onclick = function () {
+    confirm("删除这个愿望？", "不会改动当前积分与 XP。", "删除", function () {
+      state.wishes = (state.wishes || []).filter(function (x) { return x.id !== editingWishId; });
+      save();
+      $("wish-edit").close();
+      toast("已删除。");
+      renderAll();
+    });
+  };
+
+  function confirm(title, desc, yesLabel, fn) {
+    $("dlg-title").textContent = title;
+    $("dlg-desc").textContent = desc;
+    $("dlg-yes").textContent = yesLabel;
+    dlgYes = fn;
+    $("dlg").showModal();
+  }
+  $("dlg-no").onclick = function () { $("dlg").close(); };
+  $("dlg-yes").onclick = function () { var fn = dlgYes; $("dlg").close(); if (fn) fn(); };
+
+  $("btn-export").onclick = function () {
+    var t = totals();
+    var lv = levelFromXp(t.xp);
+    var payload = Object.assign({
+      exportedAt: new Date().toISOString(),
+      balance: t.balance, totalEarned: t.totalEarned, totalRedeemed: t.totalRedeemed,
+      taskCount: t.taskCount, xp: t.xp, level: lv.lv, levelName: lv.name,
+    }, state);
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    var d = new Date();
+    a.href = URL.createObjectURL(blob);
+    a.download = "行动积分备份_" + d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("备份已下载。");
+  };
+  $("btn-import").onclick = function () { $("file").click(); };
+  $("file").onchange = function () {
+    var file = this.files && this.files[0];
+    this.value = "";
+    if (!file) return;
+    confirm("导入会覆盖当前本地数据，是否继续？", "积分、XP、等级、任务、奖励、愿望都会被替换。", "继续导入", function () {
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var next = migrate(JSON.parse(String(reader.result)));
+          if (!Array.isArray(next.tasks) || !Array.isArray(next.rewards)) throw new Error("bad");
+          state = next;
+          save();
+          toast("数据已恢复。");
+          renderAll();
+          resetDrawVisual();
+        } catch (e) { toast("导入失败，请确认是本页导出的备份。"); }
+      };
+      reader.readAsText(file);
+    });
+  };
+  $("btn-clear").onclick = function () {
+    confirm("清空这台设备上的记录？", "会回到初始状态。若已导出备份，之后还能恢复。", "清空", function () {
+      state = empty();
+      save();
+      toast("已经清空。");
+      renderAll();
+      resetDrawVisual();
+    });
+  };
+
+  var rz = $("btn-reset-zoom");
+  if (rz) rz.onclick = function () {
+    if (window.__resetPageZoom) window.__resetPageZoom();
+    toast("已尝试恢复显示。若仍偏大，请用双指捏合缩小。");
+  };
+
+  renderLevels();
+  renderAll();
+})();
+</script>
+
+</body>
+</html>
